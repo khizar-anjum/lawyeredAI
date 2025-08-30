@@ -4,14 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC Legal Assistant AI</title>
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <h1>⚖️ LawyeredAI</h1>
-            <p>New York Consumer Protection Law Helper</p>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>⚖️ LawyeredAI</h1>
+                    <p>New York Consumer Protection Law Helper</p>
+                </div>
+                <div class="header-right">
+                    <button id="logoutBtn" class="logout-button">Logout</button>
+                </div>
+            </div>
         </header>
 
         <!-- Chat Interface -->
@@ -121,6 +129,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>

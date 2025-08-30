@@ -1,8 +1,26 @@
+// Simple authentication system (no Supabase required)
+const AUTH_KEY = 'lawyeredai_auth'
+
 class NYCLegalAssistant {
     constructor() {
         this.userId = this.generateUserId();
         this.sessionId = null;
         this.isProcessing = false;
+        this.checkAuthAndInitialize();
+    }
+
+    async checkAuthAndInitialize() {
+        // Check if user is authenticated
+        const session = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+        
+        if (!session || !session.user) {
+            // Not authenticated, redirect to login
+            window.location.href = '/login';
+            return;
+        }
+        
+        // User is authenticated, initialize the app
+        this.userId = session.user.id;
         this.initializeElements();
         this.attachEventListeners();
     }
@@ -57,6 +75,18 @@ class NYCLegalAssistant {
                 this.closeModal();
             }
         });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', () => this.handleLogout());
+    }
+
+    async handleLogout() {
+        try {
+            localStorage.removeItem(AUTH_KEY);
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     }
 
     adjustTextareaHeight() {
@@ -370,5 +400,8 @@ class NYCLegalAssistant {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new NYCLegalAssistant();
+    // Prevent multiple initializations
+    if (!window.legalAssistant) {
+        window.legalAssistant = new NYCLegalAssistant();
+    }
 });

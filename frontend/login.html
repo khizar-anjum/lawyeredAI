@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Legal Assistant - Login</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>⚖️ NYC Legal Assistant</h1>
+                <p>Sign in to access your legal assistant</p>
+            </div>
+
+            <div id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button id="loginBtn" class="auth-button">Sign In</button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" id="showSignup">Sign up</a>
+                </p>
+            </div>
+
+            <div id="signupForm" class="auth-form hidden">
+                <div class="form-group">
+                    <input type="text" id="fullName" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="signupEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signupPassword" placeholder="Password" required>
+                </div>
+                <button id="signupBtn" class="auth-button">Sign Up</button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" id="showLogin">Sign in</a>
+                </p>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Signing in...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/auth.js"></script>
+</body>
+</html>
