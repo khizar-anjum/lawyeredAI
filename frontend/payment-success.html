@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Success - NYC Legal Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>✅ Payment Successful!</h1>
+                <p>Your demand notice is being generated...</p>
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Generating your NYC demand notice...</p>
+            </div>
+
+            <div id="success" class="hidden">
+                <div class="success-message">
+                    <h3>🎉 Demand Notice Generated!</h3>
+                    <p>Your professional NYC demand notice has been created successfully.</p>
+                </div>
+                
+                <div class="form-actions">
+                    <button id="downloadPDF" class="button primary">📄 Download PDF</button>
+                    <button id="downloadText" class="button secondary">📝 Download Text</button>
+                    <button id="backToChat" class="button secondary">← Back to Chat</button>
+                </div>
+            </div>
+
+            <div id="error" class="hidden">
+                <div class="error-message">
+                    <h3>❌ Error</h3>
+                    <p id="errorMessage">Something went wrong. Please try again.</p>
+                </div>
+                
+                <div class="form-actions">
+                    <button id="retryBtn" class="button primary">Retry</button>
+                    <button id="backToChatError" class="button secondary">← Back to Chat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AUTH_KEY = 'lawyeredai_auth';
+        
+        class PaymentSuccessHandler {
+            constructor() {
+                this.initializeElements();
+                this.handlePaymentSuccess();
+            }
+
+            initializeElements() {
+                this.loading = document.getElementById('loading');
+                this.success = document.getElementById('success');
+                this.error = document.getElementById('error');
+                this.errorMessage = document.getElementById('errorMessage');
+                
+                // Buttons
+                document.getElementById('downloadPDF').addEventListener('click', () => this.downloadPDF());
+                document.getElementById('downloadText').addEventListener('click', () => this.downloadText());
+                document.getElementById('backToChat').addEventListener('click', () => this.backToChat());
+                document.getElementById('retryBtn').addEventListener('click', () => this.handlePaymentSuccess());
+                document.getElementById('backToChatError').addEventListener('click', () => this.backToChat());
+            }
+
+            async handlePaymentSuccess() {
+                try {
+                    // Get session ID from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const sessionId = urlParams.get('session_id');
+                    
+                    if (!sessionId) {
+                        throw new Error('No payment session ID found');
+                    }
+
+                    // Verify payment
+                    const session = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+                    if (!session || !session.user) {
+                        throw new Error('User not authenticated');
+                    }
+
+                    const verifyResponse = await fetch(`/api/payment/verify/${sessionId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    if (!verifyResponse.ok) {
+                        throw new Error('Payment verification failed');
+                    }
+
+                    const verifyData = await verifyResponse.json();
+                    
+                    if (verifyData.paid) {
+                        // Payment verified, generate demand notice
+                        await this.generateDemandNotice();
+                    } else {
+                        throw new Error('Payment not completed');
+                    }
+
+                } catch (error) {
+                    console.error('Payment success error:', error);
+                    this.showError(error.message);
+                }
+            }
+
+            async generateDemandNotice() {
+                try {
+                    // Get stored demand data
+                    const demandData = JSON.parse(localStorage.getItem('pending_demand_data') || 'null');
+                    if (!demandData) {
+                        throw new Error('No demand data found');
+                    }
+
+                    const response = await fetch('/api/demand-notice/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(demandData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to generate demand notice');
+                    }
+
+                    const data = await response.json();
+                    
+                    // Store the generated notice
+                    localStorage.setItem('generated_notice', JSON.stringify(data));
+                    
+                    // Clear pending data
+                    localStorage.removeItem('pending_demand_data');
+                    
+                    this.showSuccess();
+
+                } catch (error) {
+                    console.error('Demand notice generation error:', error);
+                    this.showError(error.message);
+                }
+            }
+
+            showSuccess() {
+                this.loading.classList.add('hidden');
+                this.error.classList.add('hidden');
+                this.success.classList.remove('hidden');
+            }
+
+            showError(message) {
+                this.loading.classList.add('hidden');
+                this.success.classList.add('hidden');
+                this.error.classList.remove('hidden');
+                this.errorMessage.textContent = message;
+            }
+
+            async downloadPDF() {
+                try {
+                    const demandData = JSON.parse(localStorage.getItem('pending_demand_data') || 'null');
+                    if (!demandData) {
+                        throw new Error('No demand data found');
+                    }
+
+                    const response = await fetch('/api/demand-notice/generate-pdf', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(demandData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to generate PDF');
+                    }
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `nyc_demand_notice_${new Date().toISOString().split('T')[0]}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    console.error('PDF download error:', error);
+                    alert('Error downloading PDF: ' + error.message);
+                }
+            }
+
+            async downloadText() {
+                try {
+                    const demandData = JSON.parse(localStorage.getItem('pending_demand_data') || 'null');
+                    if (!demandData) {
+                        throw new Error('No demand data found');
+                    }
+
+                    const response = await fetch('/api/demand-notice/download-text', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(demandData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to generate text file');
+                    }
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `nyc_demand_notice_${new Date().toISOString().split('T')[0]}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    console.error('Text download error:', error);
+                    alert('Error downloading text file: ' + error.message);
+                }
+            }
+
+            backToChat() {
+                window.location.href = '/';
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new PaymentSuccessHandler();
+        });
+    </script>
+</body>
+</html>

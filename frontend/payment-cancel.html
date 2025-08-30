@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Cancelled - NYC Legal Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>❌ Payment Cancelled</h1>
+                <p>Your payment was cancelled</p>
+            </div>
+
+            <div class="error-message">
+                <h3>Payment Not Completed</h3>
+                <p>You cancelled the payment process. Your demand notice was not generated.</p>
+                <p>You can try again by going back to the chat and clicking "Generate Demand Notice" again.</p>
+            </div>
+            
+            <div class="form-actions">
+                <button id="backToChat" class="button primary">← Back to Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('backToChat').addEventListener('click', () => {
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>
