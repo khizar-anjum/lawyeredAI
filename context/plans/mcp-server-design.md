@@ -6,14 +6,14 @@ Design for an MCP server that helps LLMs provide legal advice based on precedent
 ## Essential MCP Tools
 
 ### 1. `search_cases_by_problem`
-**Purpose**: Find relevant cases based on client problem description
+**Purpose**: Find relevant cases based on extracted legal keywords
 **Parameters**:
-- `problem_description` (string): Natural language description of legal issue
+- `keywords` (array of strings): Key legal terms and concepts extracted by LLM from client problem
 - `case_type` (optional): Consumer, small claims, landlord-tenant, etc.  
 - `date_range` (optional): Recent cases vs. established precedent
 - `jurisdiction` (default: NY state courts)
 
-**Implementation**: Uses Search API with intelligent query construction + filtering by relevant NY courts
+**Implementation**: Uses Search API with keywords provided by LLM + filtering by relevant NY courts
 
 ### 2. `get_case_details`
 **Purpose**: Deep dive into specific case for precedent analysis
@@ -106,7 +106,7 @@ Follows CourtListener's recommended workflow:
 - Identify procedural requirements and deadlines
 
 ## Use Case Workflow
-1. **Client Problem Input** → `search_cases_by_problem`
+1. **Client Problem Input** → LLM extracts keywords → `search_cases_by_problem`
 2. **Initial Case Set** → `find_similar_precedents` for each promising case
 3. **Deep Investigation** → `get_case_details` for most relevant precedents
 4. **Outcome Analysis** → `analyze_case_outcomes` for success patterns
