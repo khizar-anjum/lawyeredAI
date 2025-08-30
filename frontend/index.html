@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Legal Assistant AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>⚖️ NYC Legal Assistant AI</h1>
+            <p>New York Consumer Protection Law Helper</p>
+        </header>
+
+        <!-- Chat Interface -->
+        <main class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-content">
+                        <p>Hello! I'm your AI legal assistant specializing in <strong>New York State and NYC consumer protection law</strong>. I can help you understand your rights under NY General Business Law and NYC Consumer Protection regulations, find relevant case precedents, and generate demand notices when appropriate.</p>
+                        <p><strong>Disclaimer:</strong> This is for informational purposes only and not official legal advice. Always consult with a qualified New York attorney for legal matters.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Describe your consumer protection issue in NYC/NY..."
+                        rows="2"
+                    ></textarea>
+                    <button id="sendButton" class="send-button">
+                        <span class="button-text">Send</span>
+                        <svg class="send-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Demand Notice Modal -->
+        <div id="demandNoticeModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📝 Generate Demand Notice</h2>
+                    <button id="closeModal" class="close-button">&times;</button>
+                </div>
+                
+                <form id="demandNoticeForm" class="demand-form">
+                    <div class="form-section">
+                        <h3>Your Information</h3>
+                        <input type="text" id="complainantName" placeholder="Your Full Name" required>
+                        <textarea id="complainantAddress" placeholder="Your Address (NYC/NY)" rows="2" required></textarea>
+                        <input type="text" id="complainantContact" placeholder="Phone/Email" required>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Respondent Information</h3>
+                        <input type="text" id="respondentName" placeholder="Company/Person Name" required>
+                        <textarea id="respondentAddress" placeholder="Their Address" rows="2" required></textarea>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Issue Details</h3>
+                        <textarea id="issueDescription" placeholder="Describe the consumer protection issue in detail..." rows="3" required></textarea>
+                        <input type="text" id="amountClaimed" placeholder="Amount Claimed (optional)">
+                        <textarea id="resolutionSought" placeholder="What resolution do you seek?" rows="2" required></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="cancelDemand" class="button secondary">Cancel</button>
+                        <button type="submit" id="generateDemand" class="button primary">Generate Notice</button>
+                    </div>
+                </form>
+
+                <div id="generatedNotice" class="generated-notice hidden">
+                    <h3>Generated Demand Notice</h3>
+                    <textarea id="noticeContent" rows="15" readonly></textarea>
+                    <div class="form-actions">
+                        <button id="downloadNotice" class="button primary">Download Notice</button>
+                        <button id="editNotice" class="button secondary">Edit Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div id="typingIndicator" class="typing-indicator hidden">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
