@@ -3,6 +3,7 @@ from backend.models.chat import ChatRequest, ChatResponse, ChatMessage
 from backend.services.ai_service import AIService
 from backend.services.court_listener import CourtListenerService
 from backend.services.honcho_service import HonchoService
+from backend.services.honcho_service import get_memory_service
 from datetime import datetime
 import uuid
 
@@ -24,7 +25,7 @@ async def get_court_service():
         await service.close()
 
 async def get_honcho_service():
-    service = HonchoService()
+    service = get_memory_service()
     try:
         yield service
     finally:

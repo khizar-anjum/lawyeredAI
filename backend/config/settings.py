@@ -5,8 +5,7 @@ class Settings(BaseSettings):
     # API Keys
     openrouter_api_key: str
     courtlistener_api_key: str
-    honcho_api_key: str
-    honcho_app_id: str = "legal-assistant"
+    honcho_api_key: Optional[str] = None  # Optional for demo mode
     
     # Security
     secret_key: str
@@ -14,7 +13,9 @@ class Settings(BaseSettings):
     # API URLs
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     courtlistener_base_url: str = "https://www.courtlistener.com/api/rest/v4"
-    honcho_base_url: str = "https://api.honcho.dev"
+    
+    # Honcho Configuration
+    honcho_environment: str = "demo"  # "demo" or "production"
     
     # AI Model
     ai_model: str = "moonshotai/kimi-k2:free"
