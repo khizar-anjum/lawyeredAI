@@ -1,8 +1,26 @@
+// Simple authentication system (no Supabase required)
+const AUTH_KEY = 'lawyeredai_auth'
+
 class NYCLegalAssistant {
     constructor() {
         this.userId = this.generateUserId();
         this.sessionId = null;
         this.isProcessing = false;
+        this.checkAuthAndInitialize();
+    }
+
+    async checkAuthAndInitialize() {
+        // Check if user is authenticated
+        const session = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+        
+        if (!session || !session.user) {
+            // Not authenticated, redirect to login
+            window.location.href = '/login';
+            return;
+        }
+        
+        // User is authenticated, initialize the app
+        this.userId = session.user.id;
         this.initializeElements();
         this.attachEventListeners();
     }
@@ -46,7 +64,9 @@ class NYCLegalAssistant {
         document.getElementById('cancelDemand').addEventListener('click', () => this.closeModal());
         this.demandForm.addEventListener('submit', (e) => this.handleDemandFormSubmit(e));
         
-        document.getElementById('downloadNotice').addEventListener('click', () => this.downloadNotice());
+        // Updated download handlers for PDF and text
+        document.getElementById('downloadPDF').addEventListener('click', () => this.downloadPDF());
+        document.getElementById('downloadText').addEventListener('click', () => this.downloadText());
         document.getElementById('editNotice').addEventListener('click', () => this.editNotice());
 
         // Close modal on outside click
@@ -55,6 +75,18 @@ class NYCLegalAssistant {
                 this.closeModal();
             }
         });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', () => this.handleLogout());
+    }
+
+    async handleLogout() {
+        try {
+            localStorage.removeItem(AUTH_KEY);
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     }
 
     adjustTextareaHeight() {
@@ -173,31 +205,89 @@ class NYCLegalAssistant {
     }
 
     openDemandModal() {
+        console.log('Opening demand notice modal...');
+        
+        // Show modal
         this.modal.classList.remove('hidden');
-        this.generatedNotice.classList.add('hidden');
-        this.demandForm.classList.remove('hidden');
+        
+        // Show form, hide generated notice
+        document.getElementById('demandFormSection').classList.remove('hidden');
+        document.getElementById('generatedNoticeSection').classList.add('hidden');
+        
         // Focus on first input
         setTimeout(() => {
-            document.getElementById('complainantName').focus();
+            const firstInput = document.getElementById('complainantName');
+            if (firstInput) {
+                firstInput.focus();
+            }
         }, 100);
     }
 
     closeModal() {
+        console.log('Closing modal...');
         this.modal.classList.add('hidden');
+        
+        // Reset form
         this.demandForm.reset();
-        this.generatedNotice.classList.add('hidden');
-        this.demandForm.classList.remove('hidden');
+        
+        // Show form, hide generated notice
+        document.getElementById('demandFormSection').classList.remove('hidden');
+        document.getElementById('generatedNoticeSection').classList.add('hidden');
     }
 
     async handleDemandFormSubmit(e) {
         e.preventDefault();
+        console.log('Form submitted...');
         
         const submitButton = document.getElementById('generateDemand');
         const originalText = submitButton.textContent;
         submitButton.textContent = 'Generating...';
         submitButton.disabled = true;
+    
+        const demandData = this.getFormData();
+    
+        try {
+            const response = await fetch('/api/demand-notice/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(demandData)
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            
+            // Show generated notice
+            document.getElementById('noticeContent').value = data.notice_content;
+            
+            // Switch views
+            document.getElementById('demandFormSection').classList.add('hidden');
+            document.getElementById('generatedNoticeSection').classList.remove('hidden');
+    
+            console.log('Notice generated successfully');
+    
+        } catch (error) {
+            console.error('Error generating demand notice:', error);
+            alert('Error generating demand notice. Please try again.');
+        } finally {
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
+        }
+    }
+    
+    editNotice() {
+        console.log('Editing notice...');
+        // Switch back to form view
+        document.getElementById('generatedNoticeSection').classList.add('hidden');
+        document.getElementById('demandFormSection').classList.remove('hidden');
+    }
 
-        const demandData = {
+    getFormData() {
+        return {
             user_id: this.userId,
             session_id: this.sessionId,
             complainant_name: document.getElementById('complainantName').value,
@@ -207,11 +297,24 @@ class NYCLegalAssistant {
             respondent_address: document.getElementById('respondentAddress').value,
             issue_description: document.getElementById('issueDescription').value,
             amount_claimed: document.getElementById('amountClaimed').value,
-            resolution_sought: document.getElementById('resolutionSought').value
+            resolution_sought: document.getElementById('resolutionSought').value,
+            // New NYC template fields
+            incident_date: document.getElementById('incidentDate')?.value || null,
+            item_service: document.getElementById('itemService')?.value || null,
+            contact_method: document.getElementById('contactMethod')?.value || 'email / phone'
         };
+    }
+
+    async downloadPDF() {
+        const downloadBtn = document.getElementById('downloadPDF');
+        const originalText = downloadBtn.textContent;
+        downloadBtn.textContent = 'Generating PDF...';
+        downloadBtn.disabled = true;
 
         try {
-            const response = await fetch('/api/demand-notice/generate', {
+            const demandData = this.getFormData();
+            
+            const response = await fetch('/api/demand-notice/generate-pdf', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -223,34 +326,70 @@ class NYCLegalAssistant {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
-            
-            // Show generated notice
-            this.noticeContent.value = data.notice_content;
-            this.demandForm.classList.add('hidden');
-            this.generatedNotice.classList.remove('hidden');
+            // Download the PDF file
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nyc_demand_notice_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
 
         } catch (error) {
-            console.error('Error generating demand notice:', error);
-            alert('Error generating demand notice. Please try again.');
+            console.error('Error downloading PDF:', error);
+            alert('Error downloading PDF. Please try again.');
         } finally {
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
+            downloadBtn.textContent = originalText;
+            downloadBtn.disabled = false;
         }
     }
 
+    async downloadText() {
+        const downloadBtn = document.getElementById('downloadText');
+        const originalText = downloadBtn.textContent;
+        downloadBtn.textContent = 'Generating...';
+        downloadBtn.disabled = true;
+
+        try {
+            const demandData = this.getFormData();
+            
+            const response = await fetch('/api/demand-notice/download-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(demandData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Download the text file
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nyc_demand_notice_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error('Error downloading text file:', error);
+            alert('Error downloading text file. Please try again.');
+        } finally {
+            downloadBtn.textContent = originalText;
+            downloadBtn.disabled = false;
+        }
+    }
+
+    // Keep the old downloadNotice method for backward compatibility
     downloadNotice() {
-        const content = this.noticeContent.value;
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `nyc_demand_notice_${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        this.downloadText();
     }
 
     editNotice() {
@@ -261,5 +400,8 @@ class NYCLegalAssistant {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new NYCLegalAssistant();
+    // Prevent multiple initializations
+    if (!window.legalAssistant) {
+        window.legalAssistant = new NYCLegalAssistant();
+    }
 });

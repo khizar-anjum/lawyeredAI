@@ -1,0 +1,6 @@
+{
+	"dependencies": {
+		"@flowglad/react": "^0.10.17",
+		"@flowglad/server": "^0.10.17"
+	}
+}
